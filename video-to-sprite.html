@@ -334,6 +334,17 @@
                     </span>
                 </div>
             </div>
+            <div class="control-group">
+                <label>Edge Contour Adjustment</label>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="range" id="input-edge" min="-5" max="5" value="0" style="flex:1;">
+                    <span id="edge-val"
+                        style="min-width: 30px; text-align: center; color: var(--accent); font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem;">0</span>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top:2px; line-height: 1.4;">
+                    Fix contour fringes. Negative to shrink the edge, Positive to expand the color.
+                </div>
+            </div>
         </div>
 
         <button class="btn" id="btn-generate" disabled>Generate Sprite Sheet</button>
@@ -375,6 +386,10 @@
         const inputFps = document.getElementById('input-fps');
         const inputScale = document.getElementById('input-scale');
         const inputRemoveBg = document.getElementById('input-remove-bg');
+        const inputEdge = document.getElementById('input-edge');
+        const edgeVal = document.getElementById('edge-val');
+
+        inputEdge.addEventListener('input', () => { edgeVal.textContent = (inputEdge.value > 0 ? '+' : '') + inputEdge.value; });
 
         const statusContainer = document.getElementById('status-container');
         const progressBar = document.getElementById('progress-bar');
@@ -521,6 +536,70 @@
             }
         }
 
+        function processEdgeShift(canvas, shift) {
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            const w = canvas.width;
+            const h = canvas.height;
+            const imgData = ctx.getImageData(0, 0, w, h);
+            let outData = new Uint8ClampedArray(imgData.data);
+
+            const iterations = Math.abs(shift);
+            const isDilate = shift > 0;
+
+            for (let iter = 0; iter < iterations; iter++) {
+                const src = new Uint8ClampedArray(outData);
+
+                for (let y = 0; y < h; y++) {
+                    for (let x = 0; x < w; x++) {
+                        const idx = (y * w + x) * 4;
+                        let alpha = src[idx + 3];
+
+                        if (isDilate) {
+                            if (alpha === 0) {
+                                let maxNeighborA = 0;
+                                let sourceIdx = -1;
+                                const neighbors = [
+                                    (y > 0) ? idx - w * 4 : -1,
+                                    (y < h - 1) ? idx + w * 4 : -1,
+                                    (x > 0) ? idx - 4 : -1,
+                                    (x < w - 1) ? idx + 4 : -1
+                                ];
+                                for (let nIdx of neighbors) {
+                                    if (nIdx !== -1 && src[nIdx + 3] > maxNeighborA) {
+                                        maxNeighborA = src[nIdx + 3];
+                                        sourceIdx = nIdx;
+                                    }
+                                }
+                                if (maxNeighborA > 0 && sourceIdx !== -1) {
+                                    outData[idx] = src[sourceIdx];
+                                    outData[idx + 1] = src[sourceIdx + 1];
+                                    outData[idx + 2] = src[sourceIdx + 2];
+                                    outData[idx + 3] = maxNeighborA;
+                                }
+                            }
+                        } else {
+                            if (alpha > 0) {
+                                let minNeighborA = 255;
+                                const neighbors = [
+                                    (y > 0) ? idx - w * 4 : -1,
+                                    (y < h - 1) ? idx + w * 4 : -1,
+                                    (x > 0) ? idx - 4 : -1,
+                                    (x < w - 1) ? idx + 4 : -1
+                                ];
+                                for (let nIdx of neighbors) {
+                                    const nA = (nIdx !== -1) ? src[nIdx + 3] : 0;
+                                    if (nA < minNeighborA) minNeighborA = nA;
+                                }
+                                if (minNeighborA === 0) outData[idx + 3] = 0;
+                            }
+                        }
+                    }
+                }
+            }
+            imgData.data.set(outData);
+            ctx.putImageData(imgData, 0, 0);
+        }
+
         async function extractFrames() {
             const fps = parseFloat(inputFps.value) || 10;
             const scale = parseFloat(inputScale.value) || 1;
@@ -623,6 +702,24 @@
                 }
             } else {
                 statusText.textContent = `Done! Created ${cols}x${rows} grid (${outCanvas.width}x${outCanvas.height}px)`;
+            }
+
+            // Apply Edge Shift (Contour Adjustment)
+            const edgeShift = parseInt(inputEdge.value || "0");
+            if (edgeShift !== 0) {
+                statusText.textContent = `Applying contour adjustment (${edgeShift > 0 ? '+' : ''}${edgeShift})...`;
+                await new Promise(r => setTimeout(r, 50)); // let UI update
+
+                const img = new Image();
+                img.src = outputUrl;
+                await new Promise(r => img.onload = r);
+
+                ctxOut.clearRect(0, 0, outCanvas.width, outCanvas.height);
+                ctxOut.drawImage(img, 0, 0);
+
+                processEdgeShift(outCanvas, edgeShift);
+                outputUrl = outCanvas.toDataURL('image/png');
+                statusText.textContent = `Done! Created ${cols}x${rows} grid with contour adjustment.`;
             }
 
             // Show result
