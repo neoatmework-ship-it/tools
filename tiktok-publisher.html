@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%93%B1%3C%2Ftext%3E%3C%2Fsvg%3E">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Auto-Publisher | Dev Tools</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050508;
+            --bg-card: rgba(20, 20, 28, 0.85);
+            --border: rgba(255, 255, 255, 0.1);
+            --accent: #00f2fe;
+            --accent-glow: rgba(0, 242, 254, 0.2);
+            --tiktok-pink: #fe2c55;
+            --tiktok-cyan: #25f4ee;
+            --text: #f0eef5;
+            --text-muted: #8888a0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: radial-gradient(circle at top right, rgba(37, 244, 238, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at bottom left, rgba(254, 44, 85, 0.05) 0%, transparent 40%);
+            padding: 40px 20px;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Space Grotesk', sans-serif;
+            transition: color 0.2s;
+        }
+
+        .back-btn:hover {
+            color: var(--text);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+            text-align: center;
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        h1 span {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Glitch effect for title */
+        h1::before,
+        h1::after {
+            content: 'TikTok Auto-Publisher';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            z-index: 1;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        h1::before {
+            color: var(--tiktok-cyan);
+            transform: translate(-2px, 2px);
+            mix-blend-mode: screen;
+        }
+
+        h1::after {
+            color: var(--tiktok-pink);
+            transform: translate(2px, -2px);
+            mix-blend-mode: screen;
+        }
+
+        p.desc {
+            color: var(--text-muted);
+            text-align: center;
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .control-group input[type="text"],
+        .control-group input[type="number"] {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 14px 16px;
+            border-radius: 12px;
+            color: var(--text);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .control-group input[type="text"]:focus,
+        .control-group input[type="number"]:focus {
+            border-color: var(--tiktok-cyan);
+            box-shadow: 0 0 15px rgba(37, 244, 238, 0.1);
+        }
+
+        .file-upload {
+            position: relative;
+            width: 100%;
+            height: 120px;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+            overflow: hidden;
+        }
+
+        .file-upload:hover,
+        .file-upload.dragover {
+            border-color: var(--tiktok-pink);
+            background: rgba(254, 44, 85, 0.05);
+        }
+
+        .file-upload input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-upload .icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .file-upload .text {
+            color: var(--text);
+            font-weight: 500;
+            pointer-events: none;
+            text-align: center;
+            padding: 0 10px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--tiktok-cyan), var(--tiktok-pink));
+            color: #fff;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            width: 100%;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .btn:hover::before {
+            opacity: 1;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(254, 44, 85, 0.3);
+        }
+
+        .btn:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .log-container {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .log-entry {
+            color: var(--text-muted);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 4px;
+        }
+
+        .log-entry.success {
+            color: #4ade80;
+        }
+
+        .log-entry.error {
+            color: #f87171;
+        }
+
+        .log-entry.info {
+            color: var(--tiktok-cyan);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div style="position: absolute; top: 20px; left: 20px;">
+        <a href="index.html" class="back-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Tools
+        </a>
+    </div>
+
+    <div class="container">
+        <div>
+            <h1><span>TikTok Auto-Publisher</span></h1>
+            <p class="desc">Bypass browser OAuth limits by sending your video to an automation webhook (like Make.com or
+                Zapier) to rapidly auto-publish multiple times.</p>
+        </div>
+
+        <div class="control-group">
+            <label>Automation Webhook URL</label>
+            <input type="text" id="input-webhook" placeholder="https://hook.us1.make.com/..." autocomplete="off">
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Point this to your Make.com or
+                Zapier "Custom Webhook" trigger.</div>
+        </div>
+
+        <div class="file-upload" id="drop-zone">
+            <input type="file" id="file-input" accept="video/mp4,video/webm,video/quicktime">
+            <div class="icon">🎥</div>
+            <div class="text" id="file-label">Select Video File</div>
+        </div>
+
+        <div class="control-group">
+            <label>Number of Times to Publish (Spam Count)</label>
+            <input type="number" id="input-count" value="1" min="1" max="100">
+        </div>
+
+        <div class="control-group">
+            <label>Delay Between Posts (Seconds)</label>
+            <input type="number" id="input-delay" value="5" min="0" max="300">
+        </div>
+
+        <button class="btn" id="btn-publish" disabled>🚀 Launch Publisher</button>
+
+        <div class="log-container" id="log-container">
+            <div class="log-entry">Status: Ready.</div>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const dropZone = document.getElementById('drop-zone');
+        const fileLabel = document.getElementById('file-label');
+        const inputWebhook = document.getElementById('input-webhook');
+        const inputCount = document.getElementById('input-count');
+        const inputDelay = document.getElementById('input-delay');
+        const btnPublish = document.getElementById('btn-publish');
+        const logContainer = document.getElementById('log-container');
+
+        let selectedFile = null;
+
+        function log(message, type = 'normal') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const time = new Date().toLocaleTimeString();
+            entry.textContent = `[${time}] ${message}`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function checkForm() {
+            if (selectedFile && inputWebhook.value.trim().startsWith('http')) {
+                btnPublish.disabled = false;
+            } else {
+                btnPublish.disabled = true;
+            }
+        }
+
+        inputWebhook.addEventListener('input', checkForm);
+
+        // File Drag & Drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+            dropZone.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(evt => {
+            dropZone.addEventListener(evt, () => dropZone.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(evt => {
+            dropZone.addEventListener(evt, () => dropZone.classList.remove('dragover'), false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            if (files.length) handleFile(files[0]);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) handleFile(e.target.files[0]);
+        });
+
+        function handleFile(file) {
+            if (!file.type.startsWith('video/')) {
+                log('Invalid file type. Please upload a video.', 'error');
+                return;
+            }
+            selectedFile = file;
+            fileLabel.textContent = file.name;
+            log(`Loaded video: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`, 'info');
+            checkForm();
+        }
+
+        // Publishing Logic
+        btnPublish.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            const webhookUrl = inputWebhook.value.trim();
+            const count = parseInt(inputCount.value) || 1;
+            const delaySec = parseInt(inputDelay.value) || 0;
+
+            btnPublish.disabled = true;
+            inputWebhook.disabled = true;
+            inputCount.disabled = true;
+            fileInput.disabled = true;
+
+            log(`Starting publishing sequence. Target posts: ${count}`, 'info');
+
+            for (let i = 1; i <= count; i++) {
+                log(`Preparing dispatch ${i}/${count}...`, 'normal');
+
+                try {
+                    const formData = new FormData();
+                    formData.append('video', selectedFile);
+                    formData.append('iteration', i);
+                    formData.append('total', count);
+                    formData.append('timestamp', Date.now());
+
+                    log(`Sending payload to Webhook...`, 'normal');
+
+                    const response = await fetch(webhookUrl, {
+                        method: 'POST',
+                        body: formData,
+                        // no-cors mode can be tricky if the webhook needs strict CORS.
+                        // Assuming Make.com or Zapier, they naturally accept cross-origin POST requests.
+                    });
+
+                    if (response.ok || response.type === 'opaque') {
+                        log(`✅ Dispatch ${i} successful!`, 'success');
+                    } else {
+                        log(`❌ Dispatch ${i} failed. HTTP Status: ${response.status}`, 'error');
+                    }
+
+                } catch (error) {
+                    log(`❌ Dispatch ${i} failed: Network or CORS error.`, 'error');
+                    console.error(error);
+                }
+
+                if (i < count) {
+                    log(`Waiting ${delaySec} seconds before next post...`, 'normal');
+                    await new Promise(resolve => setTimeout(resolve, delaySec * 1000));
+                }
+            }
+
+            log(`Sequence complete! ✨`, 'info');
+
+            btnPublish.disabled = false;
+            inputWebhook.disabled = false;
+            inputCount.disabled = false;
+            fileInput.disabled = false;
+        });
+
+    </script>
+</body>
+
+</html>
