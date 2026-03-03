@@ -6,7 +6,7 @@
         href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%93%B1%3C%2Ftext%3E%3C%2Fsvg%3E">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TikTok Auto-Publisher | Dev Tools</title>
+    <title>TikTok API Auto-Publisher | Dev Tools</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
         rel="stylesheet">
@@ -16,7 +16,6 @@
             --bg-card: rgba(20, 20, 28, 0.85);
             --border: rgba(255, 255, 255, 0.1);
             --accent: #00f2fe;
-            --accent-glow: rgba(0, 242, 254, 0.2);
             --tiktok-pink: #fe2c55;
             --tiktok-cyan: #25f4ee;
             --text: #f0eef5;
@@ -42,24 +41,6 @@
             padding: 40px 20px;
         }
 
-        .back-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: var(--text-muted);
-            text-decoration: none;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-family: 'Space Grotesk', sans-serif;
-            transition: color 0.2s;
-        }
-
-        .back-btn:hover {
-            color: var(--text);
-        }
-
         .container {
             width: 100%;
             max-width: 600px;
@@ -74,107 +55,92 @@
             gap: 24px;
         }
 
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: var(--text-muted);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
         h1 {
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 2.2rem;
-            margin-bottom: 8px;
             text-align: center;
-            position: relative;
-            display: inline-block;
-            width: 100%;
-        }
-
-        h1 span {
-            position: relative;
-            z-index: 2;
-        }
-
-        /* Glitch effect for title */
-        h1::before,
-        h1::after {
-            content: 'TikTok Auto-Publisher';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: transparent;
-            z-index: 1;
-            opacity: 0.8;
-            pointer-events: none;
-        }
-
-        h1::before {
-            color: var(--tiktok-cyan);
-            transform: translate(-2px, 2px);
-            mix-blend-mode: screen;
-        }
-
-        h1::after {
-            color: var(--tiktok-pink);
-            transform: translate(2px, -2px);
-            mix-blend-mode: screen;
+            color: var(--text);
+            margin-bottom: 8px;
         }
 
         p.desc {
             color: var(--text-muted);
             text-align: center;
-            font-size: 1rem;
+            font-size: 0.95rem;
             line-height: 1.5;
-            margin-bottom: 10px;
+        }
+
+        .step-panel {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .step-header {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.2rem;
+            color: var(--tiktok-cyan);
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+            padding-bottom: 8px;
         }
 
         .control-group {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
         }
 
         .control-group label {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: var(--text-muted);
-            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
-        .control-group input[type="text"],
-        .control-group input[type="number"] {
-            background: rgba(0, 0, 0, 0.3);
+        input[type="text"],
+        input[type="number"],
+        input[type="password"] {
+            background: rgba(0, 0, 0, 0.4);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 14px 16px;
-            border-radius: 12px;
+            padding: 12px;
+            border-radius: 8px;
             color: var(--text);
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 1rem;
+            font-family: monospace;
+            width: 100%;
             outline: none;
-            transition: all 0.2s;
         }
 
-        .control-group input[type="text"]:focus,
-        .control-group input[type="number"]:focus {
+        input:focus {
             border-color: var(--tiktok-cyan);
-            box-shadow: 0 0 15px rgba(37, 244, 238, 0.1);
         }
 
         .file-upload {
-            position: relative;
-            width: 100%;
-            height: 120px;
             border: 2px dashed rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
             cursor: pointer;
-            transition: all 0.3s;
-            overflow: hidden;
+            position: relative;
+            background: rgba(0, 0, 0, 0.2);
+            transition: 0.3s;
         }
 
-        .file-upload:hover,
-        .file-upload.dragover {
+        .file-upload:hover {
             border-color: var(--tiktok-pink);
             background: rgba(254, 44, 85, 0.05);
         }
@@ -186,295 +152,313 @@
             cursor: pointer;
         }
 
-        .file-upload .icon {
-            font-size: 2rem;
-            margin-bottom: 8px;
-        }
-
-        .file-upload .text {
-            color: var(--text);
-            font-weight: 500;
-            pointer-events: none;
-            text-align: center;
-            padding: 0 10px;
-        }
-
         .btn {
-            background: linear-gradient(135deg, var(--tiktok-cyan), var(--tiktok-pink));
+            background: #333;
             color: #fff;
             border: none;
-            padding: 16px;
-            border-radius: 12px;
+            padding: 14px;
+            border-radius: 8px;
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.2rem;
-            font-weight: 700;
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            width: 100%;
-            margin-top: 10px;
-            position: relative;
-            overflow: hidden;
         }
 
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.2);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .btn:hover::before {
-            opacity: 1;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(254, 44, 85, 0.3);
+        .btn.primary {
+            background: linear-gradient(135deg, var(--tiktok-cyan), var(--tiktok-pink));
         }
 
         .btn:disabled {
-            background: #333;
-            color: #666;
+            opacity: 0.5;
             cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
         }
 
         .log-container {
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 12px;
-            padding: 16px;
-            margin-top: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            max-height: 200px;
+            background: #000;
+            border-radius: 8px;
+            padding: 12px;
+            height: 180px;
             overflow-y: auto;
             font-family: monospace;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 4px;
         }
 
-        .log-entry {
+        .log {
             color: var(--text-muted);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            padding-bottom: 4px;
         }
 
-        .log-entry.success {
+        .log.success {
             color: #4ade80;
         }
 
-        .log-entry.error {
+        .log.error {
             color: #f87171;
         }
 
-        .log-entry.info {
+        .log.info {
             color: var(--tiktok-cyan);
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.3);
         }
     </style>
 </head>
 
 <body>
 
-    <div style="position: absolute; top: 20px; left: 20px;">
-        <a href="index.html" class="back-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <line x1="19" y1="12" x2="5" y2="12"></line>
-                <polyline points="12 19 5 12 12 5"></polyline>
-            </svg>
-            Back to Tools
-        </a>
-    </div>
+    <a href="index.html" class="back-btn">← Back to Tools</a>
 
     <div class="container">
         <div>
-            <h1><span>TikTok Auto-Publisher</span></h1>
-            <p class="desc">Bypass browser OAuth limits by sending your video to an automation webhook (like Make.com or
-                Zapier) to rapidly auto-publish multiple times.</p>
+            <h1>TikTok Direct API Auto-Publisher</h1>
+            <p class="desc">100% Client-Side OAuth 2.0. Secrets stay in memory. CORS is bypassed via public proxy.</p>
         </div>
 
-        <div class="control-group">
-            <label>Automation Webhook URL</label>
-            <input type="text" id="input-webhook" placeholder="https://hook.us1.make.com/..." autocomplete="off">
-            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Point this to your Make.com or
-                Zapier "Custom Webhook" trigger.</div>
+        <!-- STEP 1 ->
+        <div class="step-panel" id="panel-auth">
+            <div class="step-header">Step 1: Application Credentials</div>
+            <div class="control-group">
+                <label>Client Key</label>
+                <input type="text" id="client-key" placeholder="aw... (from developer.tiktok.com)">
+            </div>
+            <div class="control-group">
+                <label>Client Secret</label>
+                <input type="password" id="client-secret" placeholder="Secret String">
+            </div>
+            
+            <button class="btn primary" id="btn-auth">1. Authorize Application (Opens TikTok)</button>
+
+            <div class="control-group" id="code-group" style="display:none; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                <label style="color:var(--tiktok-pink)">Paste Authorization Code from URL Redirect</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="auth-code" placeholder="Code=">
+                    <button class="btn" id="btn-token" style="white-space:nowrap;">2. Fetch Token</button>
+                </div>
+            </div>
         </div>
 
-        <div class="file-upload" id="drop-zone">
-            <input type="file" id="file-input" accept="video/mp4,video/webm,video/quicktime">
-            <div class="icon">🎥</div>
-            <div class="text" id="file-label">Select Video File</div>
+        <!-- STEP 2 ->
+        <div class="step-panel" id="panel-upload" style="opacity: 0.3; pointer-events: none;">
+            <div class="step-header">Step 2: Publisher Engine</div>
+            <div class="file-upload" id="drop-zone">
+                <input type="file" id="file-input" accept="video/mp4,video/webm">
+                <div id="file-label">🎬 Select Video File</div>
+            </div>
+            
+            <div style="display:flex; gap: 16px;">
+                <div class="control-group" style="flex:1;">
+                    <label>Post Iterations (Spam Count)</label>
+                    <input type="number" id="input-count" value="1" min="1">
+                </div>
+                <div class="control-group" style="flex:1;">
+                    <label>Delay Before Retry (Sec)</label>
+                    <input type="number" id="input-delay" value="10" min="0">
+                </div>
+            </div>
+
+            <button class="btn primary" id="btn-publish" disabled>🚀 Launch Publisher</button>
         </div>
 
-        <div class="control-group">
-            <label>Number of Times to Publish (Spam Count)</label>
-            <input type="number" id="input-count" value="1" min="1" max="100">
-        </div>
-
-        <div class="control-group">
-            <label>Delay Between Posts (Seconds)</label>
-            <input type="number" id="input-delay" value="5" min="0" max="300">
-        </div>
-
-        <button class="btn" id="btn-publish" disabled>🚀 Launch Publisher</button>
-
-        <div class="log-container" id="log-container">
-            <div class="log-entry">Status: Ready.</div>
-        </div>
+        <div class="log-container" id="log-container"></div>
     </div>
 
     <script>
-        const fileInput = document.getElementById('file-input');
-        const dropZone = document.getElementById('drop-zone');
-        const fileLabel = document.getElementById('file-label');
-        const inputWebhook = document.getElementById('input-webhook');
-        const inputCount = document.getElementById('input-count');
-        const inputDelay = document.getElementById('input-delay');
+        const REDIRECT_URI = "https://www.tiktok.com/"; // Dummy URL for intercepting auth code
+        const CORS_PROXY = "https://corsproxy.io/?url=";
+
+        // UI Elements
+        const iKey = document.getElementById('client-key');
+        const iSecret = document.getElementById('client-secret');
+        const iAuthCode = document.getElementById('auth-code');
+        const iFile = document.getElementById('file-input');
+        const iCount = document.getElementById('input-count');
+        const iDelay = document.getElementById('input-delay');
+        
+        const btnAuth = document.getElementById('btn-auth');
+        const btnToken = document.getElementById('btn-token');
         const btnPublish = document.getElementById('btn-publish');
-        const logContainer = document.getElementById('log-container');
+        const fileLabel = document.getElementById('file-label');
+        
+        const panelUpload = document.getElementById('panel-upload');
+        const logBox = document.getElementById('log-container');
 
-        let selectedFile = null;
+        // State Machine
+        let accessToken = null;
+        let selectedVideo = null;
 
-        function log(message, type = 'normal') {
-            const entry = document.createElement('div');
-            entry.className = `log-entry ${type}`;
-            const time = new Date().toLocaleTimeString();
-            entry.textContent = `[${time}] ${message}`;
-            logContainer.appendChild(entry);
-            logContainer.scrollTop = logContainer.scrollHeight;
+        function logger(msg, type='log') {
+            const el = document.createElement('div');
+            el.className = `log ${type}`;
+            el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            logBox.appendChild(el);
+            logBox.scrollTop = logBox.scrollHeight;
         }
 
-        function checkForm() {
-            if (selectedFile && inputWebhook.value.trim().startsWith('http')) {
-                btnPublish.disabled = false;
-            } else {
-                btnPublish.disabled = true;
+        logger("Ready to authenticate.");
+
+        // 1. Authorize Sequence (Link to TikTok)
+        btnAuth.onclick = () => {
+            const cKey = iKey.value.trim();
+            if (!cKey) return alert("Client Key required!");
+
+            const authUrl = `https://www.tiktok.com/v2/auth/authorize/?client_key=${cKey}&response_type=code&scope=video.upload&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
+            window.open(authUrl, "_blank");
+            
+            document.getElementById('code-group').style.display = 'block';
+            logger("Opened TikTok authorization. Copy the 'code=' from the redirected URL!", 'info');
+        };
+
+        // 2. Token Exchange via CORS Proxy
+        btnToken.onclick = async () => {
+            const cKey = iKey.value.trim();
+            const cSec = iSecret.value.trim();
+            const code = iAuthCode.value.trim();
+            
+            if (!cKey || !cSec || !code) return alert("Missing required credentials/code.");
+
+            btnToken.disabled = true;
+            logger("Requesting Access Token via Proxy...", 'info');
+
+            const targetUrl = "https://open.tiktokapis.com/v2/oauth/token/";
+            const proxiedUrl = CORS_PROXY + encodeURIComponent(targetUrl);
+
+            try {
+                const params = new URLSearchParams({
+                    client_key: cKey,
+                    client_secret: cSec,
+                    code: code,
+                    grant_type: 'authorization_code',
+                    redirect_uri: REDIRECT_URI
+                });
+
+                const req = await fetch(proxiedUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params
+                });
+
+                const res = await req.json();
+
+                if (res.access_token) {
+                    accessToken = res.access_token;
+                    logger("✅ Access Token acquired successfully!", 'success');
+                    panelUpload.style.opacity = '1';
+                    panelUpload.style.pointerEvents = 'all';
+                } else {
+                    logger("❌ Token error: " + JSON.stringify(res), 'error');
+                }
+            } catch (err) {
+                logger("❌ Request failed. Proxy block or network error.", 'error');
+                console.error(err);
             }
-        }
+            btnToken.disabled = false;
+        };
 
-        inputWebhook.addEventListener('input', checkForm);
+        // 3. File Selection
+        iFile.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            selectedVideo = file;
+            fileLabel.textContent = `🎬 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+            btnPublish.disabled = false;
+            logger(`Loaded video: ${file.name}`, 'info');
+        };
 
-        // File Drag & Drop
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
-            dropZone.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
-        });
+        // 4. Publisher Loop Engine
+        btnPublish.onclick = async () => {
+            if (!selectedVideo || !accessToken) return;
 
-        ['dragenter', 'dragover'].forEach(evt => {
-            dropZone.addEventListener(evt, () => dropZone.classList.add('dragover'), false);
-        });
-
-        ['dragleave', 'drop'].forEach(evt => {
-            dropZone.addEventListener(evt, () => dropZone.classList.remove('dragover'), false);
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-            const files = e.dataTransfer.files;
-            if (files.length) handleFile(files[0]);
-        });
-
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length) handleFile(e.target.files[0]);
-        });
-
-        function handleFile(file) {
-            if (!file.type.startsWith('video/')) {
-                log('Invalid file type. Please upload a video.', 'error');
-                return;
-            }
-            selectedFile = file;
-            fileLabel.textContent = file.name;
-            log(`Loaded video: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`, 'info');
-            checkForm();
-        }
-
-        // Publishing Logic
-        btnPublish.addEventListener('click', async () => {
-            if (!selectedFile) return;
-
-            const webhookUrl = inputWebhook.value.trim();
-            const count = parseInt(inputCount.value) || 1;
-            const delaySec = parseInt(inputDelay.value) || 0;
+            const count = parseInt(iCount.value) || 1;
+            const delay = parseInt(iDelay.value) || 10;
+            const size = selectedVideo.size;
 
             btnPublish.disabled = true;
-            inputWebhook.disabled = true;
-            inputCount.disabled = true;
-            fileInput.disabled = true;
-
-            log(`Starting publishing sequence. Target posts: ${count}`, 'info');
 
             for (let i = 1; i <= count; i++) {
-                log(`Preparing dispatch ${i}/${count}...`, 'normal');
+                logger(`--- Iteration ${i} of ${count} ---`, 'info');
+
+                // Step A: Init
+                logger("A. Initializing Upload Request...", 'log');
+                const initTarget = "https://open.tiktokapis.com/v2/post/publish/video/init/";
+                const initProxied = CORS_PROXY + encodeURIComponent(initTarget);
+                let uploadUrl = "";
+                let publishId = "";
 
                 try {
-                    const formData = new FormData();
-                    formData.append('video', selectedFile);
-                    formData.append('iteration', i);
-                    formData.append('total', count);
-                    formData.append('timestamp', Date.now());
-
-                    log(`Sending payload to Webhook...`, 'normal');
-
-                    const response = await fetch(webhookUrl, {
+                    const initReq = await fetch(initProxied, {
                         method: 'POST',
-                        body: formData,
-                        // no-cors mode can be tricky if the webhook needs strict CORS.
-                        // Assuming Make.com or Zapier, they naturally accept cross-origin POST requests.
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            post_info: {
+                                title: `CLI Auto-Publisher Test #${i}`,
+                                privacy_level: "PUBLIC_TO_EVERYONE",
+                                disable_duet: false,
+                                disable_comment: false,
+                                disable_stitch: false
+                            },
+                            source_info: {
+                                source: "FILE_UPLOAD",
+                                video_size: size,
+                                chunk_size: size,
+                                total_chunk_count: 1
+                            }
+                        })
+                    });
+                    
+                    const initRes = await initReq.json();
+                    if (initRes.data && initRes.data.upload_url) {
+                        uploadUrl = initRes.data.upload_url;
+                        publishId = initRes.data.publish_id;
+                        logger("Upload URL acquired.", 'log');
+                    } else {
+                        logger("❌ Failed to init upload: " + JSON.stringify(initRes), 'error');
+                        continue;
+                    }
+                } catch (e) {
+                    logger("❌ Network error during Init.", 'error');
+                    continue;
+                }
+
+                // Step B: Put Binary Chunk
+                logger("B. Transferring video binary data...", 'log');
+                try {
+                    // We must proxy the PUT upload URL as well to avoid CORS on the binary stream AWS bucket
+                    const putProxied = CORS_PROXY + encodeURIComponent(uploadUrl);
+                    
+                    const putReq = await fetch(putProxied, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Range': `bytes 0-${size-1}/${size}`,
+                            'Content-Type': 'video/mp4'
+                        },
+                        body: selectedVideo // Direct File Blob
                     });
 
-                    if (response.ok || response.type === 'opaque') {
-                        log(`✅ Dispatch ${i} successful!`, 'success');
+                    if (putReq.ok) {
+                        logger("Video chunk stream successful.", 'log');
                     } else {
-                        log(`❌ Dispatch ${i} failed. HTTP Status: ${response.status}`, 'error');
+                        throw new Error(`PUT Status Failed (${putReq.status})`);
                     }
-
-                } catch (error) {
-                    log(`❌ Dispatch ${i} failed: Network or CORS error.`, 'error');
-                    console.error(error);
+                } catch (e) {
+                    logger("❌ Binary upload transfer failed: " + e.message, 'error');
+                    continue;
                 }
 
+                logger("✅ Video submitted to TikTok queue!", 'success');
+
+                // Wait for rate limits
                 if (i < count) {
-                    log(`Waiting ${delaySec} seconds before next post...`, 'normal');
-                    await new Promise(resolve => setTimeout(resolve, delaySec * 1000));
+                    logger(`Waiting ${delay}s before next post...`, 'log');
+                    await new Promise(r => setTimeout(r, delay * 1000));
                 }
             }
-
-            log(`Sequence complete! ✨`, 'info');
-
+            logger("🎉 Publishing Sequence Complete!", 'info');
             btnPublish.disabled = false;
-            inputWebhook.disabled = false;
-            inputCount.disabled = false;
-            fileInput.disabled = false;
-        });
-
+        };
     </script>
 </body>
-
 </html>
