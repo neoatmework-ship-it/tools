@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%A7%B0%3C%2Ftext%3E%3C%2Fsvg%3E">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video to Sprite Sheet Converter</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        :root {
+            --bg: #050508;
+            --bg-card: rgba(14, 14, 20, 0.85);
+            --border: rgba(255, 255, 255, 0.1);
+            --accent: #22d3ee;
+            --accent-glow: rgba(34, 211, 238, 0.2);
+            --pink: #f472b6;
+            --text: #f0eef5;
+            --text-muted: #8888a0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            games and web animations.</p></div><div class="drop-zone" id="drop-zone"><input type="file" id="file-input" accept="video/*"><div class="drop-icon">🎬</div><div class="drop-text" id="drop-text">Drag & Drop your video here</div><div class="drop-subtext">or click to browse (.mp4, .webm, .mov)</div></div><div class="controls"><div class="control-group"><label>Frames Per Second</label><input type="number" id="input-fps" value="10" min="1" max="60"></div><div class="control-group"><label>Scale Factor (e.g. 0.5 for 50%)</label><input type="number" id="input-scale" value="0.25" min="0.01" max="1" step="0.01"></div><div class="control-group"><label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="input-remove-bg" style="width:16px; height:16px; margin:0;">Remove Background (AI) </label><div style="display:flex; flex-direction:column; gap:8px; margin-top:2px;"><span style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">Uses a completely free,
+            100% client-side AI model (<a href="https://huggingface.co/briaai/RMBG-1.4" target="_blank"
+                style="color: var(--accent);" >RMBG-1.4</a>). It processes locally in your browser. The first run downloads the model (approx. 170MB cache). </span></div></div></div><button class="btn" id="btn-generate" disabled>Generate Sprite Sheet</button><div class="status-container" id="status-container"><div class="progress-bar-bg"><div class="progress-bar" id="progress-bar"></div></div><div class="status-text" id="status-text">Preparing...</div></div><div class="result-container" id="result-container"><canvas id="out-canvas" style="display:none;"></canvas><img id="preview-img" class="preview" alt="Sprite Sheet Preview"><button class="btn" id="btn-download"
+            style="background: linear-gradient(135deg, var(--accent), var(--pink)); color: #fff; border:none; margin-top: 10px;">Download <button class="btn" id="btn-download-zip"
+            style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; border:none; margin-top: 10px; margin-left: 10px;">Download Frames (ZIP) 📦</button></div></div><script type="module"> // Import transformers from the CDN as an ES Module
+
+            // Using @huggingface/transformers (v3) which supports Segformer architecture.
+            import {
+                pipeline,
+                env
+            }
+
+            from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers';
+
+            // Expose them to the global scope for the main application script
+            window.transformersPipeline=pipeline;
+            window.transformersEnv=env;
+            </script><script>const fileInput=document.getElementById('file-input');
+            const dropZone=document.getElementById('drop-zone');
+            const dropText=document.getElementById('drop-text');
+            const defaultDropText="Drag & Drop your video here";
+            const btnGenerate=document.getElementById('btn-generate');
+            const inputFps=document.getElementById('input-fps');
+            const inputScale=document.getElementById('input-scale');
+            const inputRemoveBg=document.getElementById('input-remove-bg');
+
+            const statusContainer=document.getElementById('status-container');
+            const progressBar=document.getElementById('progress-bar');
+            const statusText=document.getElementById('status-text');
+
+            const resultContainer=document.getElementById('result-container');
+            const outCanvas=document.getElementById('out-canvas');
+
+            const ctxOut=outCanvas.getContext('2d', {
+                willReadFrequently: true
+            });
+        const previewImg=document.getElementById('preview-img');
+        const btnDownload=document.getElementById('btn-download');
+        const btnDownloadZip=document.getElementById('btn-download-zip');
+
+        let videoFile=null;
+
+        // Drag & drop logic
+        ['dragenter',
+        'dragover',
+        'dragleave',
+        'drop'].forEach(eventName=> {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter',
+        'dragover'].forEach(eventName=> {
+                dropZone.addEventListener(eventName, ()=> dropZone.classList.add('dragover'), false);
+            });
+
+        ['dragleave',
+        'drop'].forEach(eventName=> {
+                dropZone.addEventListener(eventName, ()=> dropZone.classList.remove('dragover'), false);
+            });
+
+        dropZone.addEventListener('drop', (e)=> {
+                let dt=e.dataTransfer;
+                let files=dt.files;
+                handleFiles(files);
+            });
+
+        fileInput.addEventListener('change', function () {
+                handleFiles(this.files);
+            });
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                videoFile=files[0];
+
+                if ( !videoFile.type.startsWith ('video/')) {
+                    alert("Please upload a valid video file.");
+                    videoFile=null;
+                    return;
+                }
+
+                dropText.textContent=videoFile.name;
+                btnGenerate.disabled=false;
+                resultContainer.style.display='none';
+                statusContainer.style.display='none';
+            }
+        }
+
+        btnGenerate.addEventListener('click', async ()=> {
+                if ( !videoFile) return;
+
+                btnGenerate.disabled=true;
+                statusContainer.style.display='block';
+                resultContainer.style.display='none';
+                progressBar.style.width='0%';
+                statusText.textContent='Loading video...';
+
+                try {
+                    await extractFrames();
+                }
+
+                catch (err) {
+                    statusText.textContent='Error occurred!';
+                    statusText.style.color='#ef4444';
+                    console.error(err);
+                    btnGenerate.disabled=false;
+                }
+            });
+
+        let segmenterPipeline=null;
+
+        async function processBgRemoval(canvas) {
+            try {
+
+                // Initialize pipeline only once to cache it
+                if ( !segmenterPipeline) {
+                    statusText.textContent='Loading AI model... (First run downloads 170MB)';
+
+                    if ( !window.transformersPipeline) {
+                        throw new Error("Transformers.js AI engine failed to load from CDN.");
+                    }
+
+                    window.transformersEnv.allowLocalModels=false;
+                    segmenterPipeline=await window.transformersPipeline('image-segmentation', 'briaai/RMBG-1.4');
+                }
+
+                statusText.textContent='Removing background via AI...';
+
+                // Get canvas data as data url for the model input
+                const dataUrl=canvas.toDataURL('image/png');
+
+                // Run the image segmentation
+                const output=await segmenterPipeline(dataUrl);
+
+                // The output mask is returned as a RawImage. Fallback if it's an array for Xenova's generic outputs
+                const mask=Array.isArray(output) ? output[0].mask : output.mask;
+                if ( !mask) throw new Error("Could not extract mask from model output");
+
+                const ctx=canvas.getContext('2d');
+                const imgData=ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+                // Check if mask needs to be resized to the canvas
+                // RMBG scale and un-scale usually handles it, but let's confirm sizes match
+                if (mask.width===canvas.width && mask.height===canvas.height) {
+
+                    // Fast path: Apply the monochrome mask directly to the canvas alpha channel
+                    for (let i=0; i < imgData.data.length / 4; i++) {
+                        imgData.data[i * 4+3]=mask.data[i];
+                    }
+
+                    ctx.putImageData(imgData, 0, 0);
+                }
+
+                else {
+                    // Slow path: the mask is differently sized, we have to scale it up
+                    const maskCanvas=document.createElement('canvas');
+                    maskCanvas.width=mask.width;
+                    maskCanvas.height=mask.height;
+                    const maskCtx=maskCanvas.getContext('2d');
+                    const maskImgData=maskCtx.createImageData(mask.width, mask.height);
+
+                    // Convert RawImage grayscale mask to an RGBA mask image
+                    for (let i=0; i < mask.data.length; i++) {
+                        maskImgData.data[i * 4]=0; // r
+                        maskImgData.data[i * 4+1]=0; // g
+                        maskImgData.data[i * 4+2]=0; // b
+                        maskImgData.data[i * 4+3]=mask.data[i]; // a
+                    }
+
+                    maskCtx.putImageData(maskImgData, 0, 0);
+
+                    // Draw the original image but only keep pixels where the mask is opaque (source-in)
+                    ctx.globalCompositeOperation='destination-in';
+                    ctx.drawImage(maskCanvas, 0, 0, canvas.width, canvas.height);
+                    ctx.globalCompositeOperation='source-over';
+                }
+
+                return canvas.toDataURL('image/png');
+
+            }
+
+            catch (err) {
+                console.error("BG Removal Error:", err);
+                throw err;
+            }
+        }
+
+        async function extractFrames() {
+            const fps=parseFloat(inputFps.value) || 10;
+            const scale=parseFloat(inputScale.value) || 1;
+
+            const video=document.createElement('video');
+            video.src=URL.createObjectURL(videoFile);
+            video.muted=true;
+            video.playsInline=true;
+
+            await new Promise((resolve, reject)=> {
+                    video.addEventListener('loadeddata', resolve, {
+                        once: true
+                    });
+
+                video.addEventListener('error', reject, {
+                    once: true
+                });
+        });
+
+        // Fallback for missing duration (some webm files from specific encoders)
+        if ( !Number.isFinite(video.duration) || video.duration===0) {
+            video.currentTime=1e101; // Magic hack to get duration
+
+            await new Promise(r=> video.addEventListener('timeupdate', r, {
+                    once: true
+                }));
+        video.currentTime=0;
+        }
+
+        const duration=video.duration;
+        const interval=1 / fps;
+        const frames=[];
+
+        const w=Math.max(1, Math.floor(video.videoWidth * scale));
+        const h=Math.max(1, Math.floor(video.videoHeight * scale));
+
+        const expectedFrames=Math.floor(duration * fps) || 1;
+
+        statusText.textContent=`Extracting frames... 0 / $ {
+            expectedFrames
+        }
+
+        `;
+
+        for (let t=0; t < duration; t +=interval) {
+            video.currentTime=t;
+
+            await new Promise(resolve=> {
+                    const onSeeked=()=> {
+                        video.removeEventListener('seeked', onSeeked);
+                        resolve();
+                    }
+
+                    ;
+                    video.addEventListener('seeked', onSeeked);
+                });
+
+            // Yield thread to allow render tick (fixes blank frames in some browsers)
+            await new Promise(r=> requestAnimationFrame(r));
+            await new Promise(r=> setTimeout(r, 10));
+
+            const c=document.createElement('canvas');
+            c.width=w;
+            c.height=h;
+
+            const ctx=c.getContext('2d', {
+                willReadFrequently: true
+            });
+        ctx.drawImage(video, 0, 0, w, h);
+
+        frames.push(c);
+
+        const pct=Math.min(100, Math.floor((frames.length / expectedFrames) * 100));
+
+        progressBar.style.width=`$ {
+            pct
+        }
+
+        %`;
+
+        statusText.textContent=`Extracting frames... $ {
+            frames.length
+        }
+
+        / $ {
+            expectedFrames
+        }
+
+        `;
+        }
+
+        if (frames.length===0) {
+            statusText.textContent='Failed to extract any frames.';
+            btnGenerate.disabled=false;
+            return;
+        }
+
+        // Layout Calculation (Square grid)
+        statusText.textContent='Stitching sprite sheet...';
+        await new Promise(r=> setTimeout(r, 50)); // let UI update
+
+        const cols=Math.ceil(Math.sqrt(frames.length));
+        const rows=Math.ceil(frames.length / cols);
+
+        outCanvas.width=cols * w;
+        outCanvas.height=rows * h;
+
+        // Clear transparent BG
+        ctxOut.clearRect(0, 0, outCanvas.width, outCanvas.height);
+
+        for (let i=0; i < frames.length; i++) {
+            const x=(i % cols) * w;
+            const y=Math.floor(i / cols) * h;
+            ctxOut.drawImage(frames[i], x, y);
+        }
+
+        // Expected export URL
+        let outputUrl=outCanvas.toDataURL('image/png');
+
+        // Free In-Browser AI Background Removal
+        if (inputRemoveBg.checked) {
+            statusText.textContent='Removing background via AI... (First run downloads 40mb model)';
+
+            try {
+                outputUrl=await processBgRemoval(outCanvas);
+
+                statusText.textContent=`Done ! Background removed. Created $ {
+                    cols
+                }
+
+                x$ {
+                    rows
+                }
+
+                grid ($ {
+                        outCanvas.width
+                    }
+
+                    x$ {
+                        outCanvas.height
+                    }
+
+                    px)`;
+            }
+
+            catch (err) {
+                console.error(err);
+                alert("Local AI Background removal failed: " + (err.message || err));
+                statusText.textContent="Background removal failed.";
+                btnGenerate.disabled=false;
+                return;
+            }
+        }
+
+        else {
+            statusText.textContent=`Done ! Created $ {
+                cols
+            }
+
+            x$ {
+                rows
+            }
+
+            grid ($ {
+                    outCanvas.width
+                }
+
+                x$ {
+                    outCanvas.height
+                }
+
+                px)`;
+        }
+
+        // Show result
+        previewImg.src=outputUrl;
+
+        resultContainer.style.display='block';
+        btnGenerate.disabled=false;
+
+        btnDownload.onclick=()=> {
+            const link=document.createElement('a');
+
+            link.download=`spritesheet_$ {
+                Math.floor(Date.now() / 1000)
+            }
+
+            .png`;
+            link.href=outputUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        ;
+
+        btnDownloadZip.onclick=async ()=> {
+            const zip=new JSZip();
+            btnDownloadZip.disabled=true;
+            const originalText=btnDownloadZip.textContent;
+            btnDownloadZip.textContent="Zipping frames... ⏳";
+
+            try {
+                if (inputRemoveBg.checked) {
+                    // The outputUrl has the bg removed from the whole sprite sheet, chop it back up
+                    const img=new Image();
+                    img.src=outputUrl;
+                    await new Promise(r=> img.onload=r);
+
+                    const tmpCanvas=document.createElement('canvas');
+                    tmpCanvas.width=w;
+                    tmpCanvas.height=h;
+                    const tmpCtx=tmpCanvas.getContext('2d');
+
+                    for (let i=0; i < frames.length; i++) {
+                        const x=(i % cols) * w;
+                        const y=Math.floor(i / cols) * h;
+                        tmpCtx.clearRect(0, 0, w, h);
+                        tmpCtx.drawImage(img, x, y, w, h, 0, 0, w, h);
+                        const blob=await new Promise(r=> tmpCanvas.toBlob(r, 'image/png'));
+
+                        zip.file(`frame_$ {
+                                i.toString().padStart(3, '0')
+                            }
+
+                            .png`, blob);
+                    }
+                }
+
+                else {
+
+                    // Original frames are already clean on transparent canvases (or opaque)
+                    for (let i=0; i < frames.length; i++) {
+                        const blob=await new Promise(r=> frames[i].toBlob(r, 'image/png'));
+
+                        zip.file(`frame_$ {
+                                i.toString().padStart(3, '0')
+                            }
+
+                            .png`, blob);
+                    }
+                }
+
+                const zipBlob=await zip.generateAsync({
+                    type: 'blob'
+                });
+            const zipUrl=URL.createObjectURL(zipBlob);
+
+            const link=document.createElement('a');
+
+            link.download=`extracted_frames_$ {
+                Math.floor(Date.now() / 1000)
+            }
+
+            .zip`;
+            link.href=zipUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(zipUrl);
+
+        }
+
+        catch (e) {
+            console.error("Zipping error:", e);
+            alert("Failed to zip frames! See console.");
+        }
+
+        finally {
+            btnDownloadZip.textContent=originalText;
+            btnDownloadZip.disabled=false;
+        }
+        }
+
+        ;
+        }
+
+        // Easter Egg Logic
+        let secretBuffer="";
+        const secretWords=["isaac",
+        "minotaur"];
+
+        document.addEventListener('keydown', (e)=> {
+                if ( !e.key || e.key.length !==1) return;
+                secretBuffer +=e.key.toLowerCase();
+                if (secretBuffer.length > 20) secretBuffer=secretBuffer.slice(-20);
+
+                if (secretWords.some(w=> secretBuffer.endsWith (w))) {
+                    secretBuffer="";
+                    triggerMinotaur();
+                }
+            });
+
+        function triggerMinotaur() {
+            let mino=document.getElementById('easter-minotaur');
+
+            if ( !mino) {
+                mino=document.createElement('div');
+                mino.id='easter-minotaur';
+                mino.className='easter-minotaur';
+                document.body.appendChild(mino);
+            }
+
+            // Reset animation
+            mino.classList.remove('active');
+            void mino.offsetWidth; // trigger reflow
+            mino.classList.add('active');
+
+            mino.addEventListener('animationend', (evt)=> {
+                    if (evt.animationName==='minotaur-move') {
+                        mino.classList.remove('active');
+                    }
+                }
+
+                , {
+                once: true
+            });
+        }
+
+        </script></body></html>
