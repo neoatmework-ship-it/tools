@@ -2,7 +2,8 @@
 <html lang="en">
 
 <head>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%8E%9E%EF%B8%8F%3C%2Ftext%3E%3C%2Fsvg%3E">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%A7%B0%3C%2Ftext%3E%3C%2Fsvg%3E">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Video to Sprite Sheet Converter</title>
@@ -39,35 +40,6 @@
             background-image: radial-gradient(circle at top right, rgba(34, 211, 238, 0.05) 0%, transparent 40%),
                 radial-gradient(circle at bottom left, rgba(244, 114, 182, 0.05) 0%, transparent 40%);
             padding: 40px 20px;
-        }
-
-        /* WWG Back Button */
-        .wwg-back-btn {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            width: 44px;
-            height: 44px;
-            background: rgba(10, 10, 15, 0.7);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #a78bfa;
-            z-index: 99999;
-            transition: all 0.3s ease;
-            text-decoration: none;
-        }
-
-        .wwg-back-btn:hover {
-            background: rgba(167, 139, 250, 0.2);
-            border-color: rgba(167, 139, 250, 0.4);
-            transform: scale(1.05) translateX(-2px);
-            color: #fff;
-            box-shadow: 0 0 15px rgba(167, 139, 250, 0.3);
         }
 
         /* Easter Egg */
@@ -313,13 +285,17 @@
 
 <body>
 
-    <a href="index.html" class="wwg-back-btn" title="Back to Gallery">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <line x1="19" y1="12" x2="5" y2="12"></line>
-            <polyline points="12 19 5 12 12 5"></polyline>
-        </svg>
-    </a>
+    <div style="position: absolute; top: 20px; left: 20px;">
+        <a href="index.html"
+            style="color: #a78bfa; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 8px; font-family: 'Space Grotesk', sans-serif;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Tools
+        </a>
+    </div>
 
     <div class="container">
         <div>
