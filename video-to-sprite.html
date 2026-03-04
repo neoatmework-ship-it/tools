@@ -390,8 +390,18 @@
                 <input type="number" id="input-fps" value="10" min="1" max="60">
             </div>
             <div class="control-group">
-                <label>Scale Factor (e.g. 0.5 for 50%)</label>
-                <input type="number" id="input-scale" value="0.25" min="0.01" max="1" step="0.01">
+                <label>Dimensions</label>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="number" id="input-width" placeholder="W" style="flex:1;">
+                    <span style="color:var(--text-muted)">×</span>
+                    <input type="number" id="input-height" placeholder="H" style="flex:1;">
+                </div>
+                <div style="display:flex; align-items:center; gap:6px; margin-top:4px;">
+                    <input type="checkbox" id="input-ratio" checked style="width:14px; height:14px; margin:0;">
+                    <label for="input-ratio"
+                        style="text-transform:none; letter-spacing:0; cursor:pointer; font-size:0.75rem;">Keep
+                        Ratio</label>
+                </div>
             </div>
             <div class="control-group">
                 <label>Background Removal Mode</label>
@@ -478,7 +488,9 @@
         const defaultDropText = "Drag & Drop your video here";
         const btnGenerate = document.getElementById('btn-generate');
         const inputFps = document.getElementById('input-fps');
-        const inputScale = document.getElementById('input-scale');
+        const inputWidth = document.getElementById('input-width');
+        const inputHeight = document.getElementById('input-height');
+        const inputRatio = document.getElementById('input-ratio');
         const bgModeRadios = document.getElementsByName('bg-mode');
         const chromaSettings = document.getElementById('chroma-settings');
         const aiInfo = document.getElementById('ai-info');
@@ -502,6 +514,21 @@
 
         inputEdge.addEventListener('input', () => { edgeVal.textContent = (inputEdge.value > 0 ? '+' : '') + inputEdge.value; });
 
+        let videoFile = null;
+        let aspectRatio = 1;
+
+        inputWidth.addEventListener('input', () => {
+            if (inputRatio.checked && videoFile) {
+                inputHeight.value = Math.round(inputWidth.value / aspectRatio);
+            }
+        });
+
+        inputHeight.addEventListener('input', () => {
+            if (inputRatio.checked && videoFile) {
+                inputWidth.value = Math.round(inputHeight.value * aspectRatio);
+            }
+        });
+
         const statusContainer = document.getElementById('status-container');
         const progressBar = document.getElementById('progress-bar');
         const statusText = document.getElementById('status-text');
@@ -513,7 +540,7 @@
         const btnDownload = document.getElementById('btn-download');
         const btnDownloadZip = document.getElementById('btn-download-zip');
 
-        let videoFile = null;
+        // let videoFile = null; (Moved up)
 
         // Drag & drop logic
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -552,7 +579,18 @@
                     return;
                 }
                 dropText.textContent = videoFile.name;
-                btnGenerate.disabled = false;
+
+                // Load video metadata to get dimensions
+                const video = document.createElement('video');
+                video.src = URL.createObjectURL(videoFile);
+                video.onloadedmetadata = () => {
+                    aspectRatio = video.videoWidth / video.videoHeight;
+                    // Default to 25% scale or at least some reasonable size
+                    inputWidth.value = Math.round(video.videoWidth * 0.25);
+                    inputHeight.value = Math.round(video.videoHeight * 0.25);
+                    btnGenerate.disabled = false;
+                };
+
                 resultContainer.style.display = 'none';
                 statusContainer.style.display = 'none';
             }
@@ -752,7 +790,8 @@
 
         async function extractFrames() {
             const fps = parseFloat(inputFps.value) || 10;
-            const scale = parseFloat(inputScale.value) || 1;
+            const w = parseInt(inputWidth.value) || 100;
+            const h = parseInt(inputHeight.value) || 100;
 
             const video = document.createElement('video');
             video.src = URL.createObjectURL(videoFile);
@@ -775,8 +814,8 @@
             const interval = 1 / fps;
             const frames = [];
 
-            const w = Math.max(1, Math.floor(video.videoWidth * scale));
-            const h = Math.max(1, Math.floor(video.videoHeight * scale));
+            // const w = Math.max(1, Math.floor(video.videoWidth * scale)); (Using inputWidth)
+            // const h = Math.max(1, Math.floor(video.videoHeight * scale)); (Using inputHeight)
 
             const expectedFrames = Math.floor(duration * fps) || 1;
 
